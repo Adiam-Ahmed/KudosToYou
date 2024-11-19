@@ -1,11 +1,16 @@
 import React from 'react';
-import { View, Text, FlatList, Button, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import Header from '../components/Header';
+import DashBoardImage from '../components/DashBoardImage';
 
 
-const ChatScreen = ({ navigation }) => {
+
+
+const DashboardScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Dashboard Screen </Text>
+            <Header />
+            <DashBoardImage />
         </View>
     );
 };
@@ -13,7 +18,6 @@ const ChatScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 50,
     },
     title: {
         fontSize: 24,
@@ -21,4 +25,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ChatScreen;
+export default DashboardScreen;
