@@ -3,38 +3,32 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'rea
 import { categories } from '../assets/data/Categories';
 
 
-const ChatScreen = ({ navigation }) => {
+const Toggler = ({ selectedTags, setSelectedTags }) => {
     const [expandedCategories, setExpandedCategories] = useState([]);
-    const [selectedTags, setSelectedTags] = useState([]);
 
-    console.log(expandedCategories)
-    console.log(selectedTags)
-
-    //Toggle Category 
-    const toggleCategory = (category) => {
-        if (expandedCategories.includes(category)) {
-            setExpandedCategories(expandedCategories.filter(item => item != category))
-        } else {
-            setExpandedCategories([...expandedCategories, category]);
-        };
-    };
-    //Toggle Tag 
     const toggleTag = (tag) => {
         if (selectedTags.includes(tag)) {
-            setSelectedTags(selectedTags.filter(t => t !== tag))
+            setSelectedTags(selectedTags.filter((t) => t !== tag));
         } else {
             if (selectedTags.length < 5) {
                 setSelectedTags([...selectedTags, tag]);
             } else {
-                Alert.alert("Tag Limit Reached", "You can select up to 5 tags only.");
+                Alert.alert('Tag Limit Reached', 'You can select up to 5 tags only.');
             }
         }
-    }
+    };
+
+    const toggleCategory = (category) => {
+        setExpandedCategories((prev) =>
+            prev.includes(category) ? prev.filter((item) => item !== category) : [...prev, category]
+        );
+    };
+
     return (
         <ScrollView style={styles.container}>
+            <Text style={styles.label}>Select Tags</Text>
             {Object.entries(categories).map(([category, tags], index) => (
                 <View key={index} style={styles.category}>
-                    {/* Category Header */}
                     <TouchableOpacity
                         style={styles.categoryHeader}
                         onPress={() => toggleCategory(category)}
@@ -44,8 +38,6 @@ const ChatScreen = ({ navigation }) => {
                             {expandedCategories.includes(category) ? '-' : '+'}
                         </Text>
                     </TouchableOpacity>
-
-                    {/* Tags as Chips */}
                     {expandedCategories.includes(category) && (
                         <View style={styles.tagContainer}>
                             {tags.map((tag, i) => (
@@ -71,12 +63,6 @@ const ChatScreen = ({ navigation }) => {
                     )}
                 </View>
             ))}
-            <TouchableOpacity
-                onPress={() => console.log('Selected Tags:', selectedTags)}
-                style={styles.submitButton}
-            >
-                <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
         </ScrollView>
     );
 };
@@ -84,15 +70,21 @@ const ChatScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#F4F6FF',
-        marginTop: 40,
-        
+        backgroundColor: '#fff',
+        padding: 16,
+        borderRadius: 10,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+
     },
     category: {
         marginBottom: 10,
         flexDirection: 'column',
-        
+
     },
     categoryHeader: {
         flexDirection: 'row',
@@ -114,7 +106,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         marginTop: 10,
-        
+
     },
     tagChip: {
         backgroundColor: '#ccc',
@@ -145,4 +137,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default ChatScreen; 
+export default Toggler; 
