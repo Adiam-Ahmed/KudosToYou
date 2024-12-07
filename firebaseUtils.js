@@ -1,13 +1,17 @@
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { addDoc, collection } from 'firebase/firestore';
-import { storage, db } from './firebaseConfig';  
+import { ref, uploadBytesResumable, getDownloadURL, getStorage } from 'firebase/storage';
+import { addDoc, collection, doc, getDocs } from 'firebase/firestore';
+import { storage, db } from './firebaseConfig';
+
+
+
 
 // Function to upload an image and get the download URL
-export const uploadImage = async (uri, setProgress) => {
+export const uploadImage = async (uri, userId, setProgress) => {
     try {
         const response = await fetch(uri);
         const blob = await response.blob();
-        const storageRef = ref(storage, `uploads/${Date.now()}`);
+
+        const storageRef = ref(storage, `uploads/${userId}/${Date.now()}`);
         const uploadTask = uploadBytesResumable(storageRef, blob);
 
         return new Promise((resolve, reject) => {
@@ -40,21 +44,34 @@ export const uploadImage = async (uri, setProgress) => {
 
 
 // Function to save data to Firestore
-export const saveSubmission = async (imageUrl, tags, description) => {
-    const tagsArray = tags.split(',').map(tag => tag.trim()); // Split and clean the tags input
+export const saveSubmission = async (imageUrl, tags, description, userId, category, tagId, categoryId) => {
     const submissionData = {
+        tagId,
+        categoryId,
+        userId, 
         imageUrl,
-        tags: tagsArray,    // tags should be stored as an array
-        description,        // description should be stored as a string
+        tags,    
+        description,        
+        category,
         createdAt: new Date(),
     };
 
     try {
-        await addDoc(collection(db, 'submissions'), submissionData);
+        await addDoc(collection(db, 'kudos'), submissionData);
         console.log("Submission successful!");
     } catch (error) {
         console.error("Error saving submission:", error.message);
     }
 };
 
+// Function to get data to Firestore
+export const fetchData = async (kudos) =>{
+    try {
+        const querySnapshot = await getDocs(collection(db, 'kudos'));
+        const data = querySnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}))
+        return data
+    } catch (error) {
+        console.error("Error fetching data: ", error);
+    }
+}
 

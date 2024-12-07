@@ -6,12 +6,19 @@ import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { uploadImage, saveSubmission } from '../firebaseUtils';
 import Toggler from '../components/Toggler';
 
+
 const AddItemScreen = () => {
+    const userId = 12345
     const [image, setImage] = useState(null);
+    const [category, setCategory] = useState([])
     const [tags, setTags] = useState([]);
     const [description, setDescription] = useState('');
     const [uploadProgress, setUploadProgress] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [categoryId, setCategoryId] = useState([]);
+    const [tagId, setTagId] = useState([]);
+
+ 
 
     // Function to handle image selection
     const pickImage = async () => {
@@ -60,6 +67,7 @@ const AddItemScreen = () => {
     const resetForm = () => {
         setImage(null);
         setTags([]);
+        setCategory([])
         setDescription('');
         setUploadProgress(0);
         setLoading(false);
@@ -75,19 +83,18 @@ const AddItemScreen = () => {
 
         try {
             setLoading(true);
-            const downloadURL = await uploadImage(image, setUploadProgress); // Upload image
-            saveSubmission(downloadURL, tags, description); // Save submission
-            console.log('Selected Tags:', downloadURL, tags, description);
+            const downloadURL = await uploadImage(image, userId, setUploadProgress); // Upload image
+            await saveSubmission(downloadURL, tags, description, userId, category, categoryId, tagId); // Save submission
+            console.log('Selected Tags:', downloadURL, tags, description, userId, category);
             Alert.alert('Success', 'Your submission has been uploaded!');
             resetForm();
         } catch (err) {
             console.error("Error during submission:", err);
             Alert.alert('Error', `Failed to upload submission: ${err.message}`);
         } finally {
-            setLoading(false); // Ensure loading is reset
+            setLoading(false); 
         }
     };
-
     return (
         <KeyboardAvoidingView
             style={styles.container}
@@ -114,7 +121,12 @@ const AddItemScreen = () => {
                 </View>
 
                 {/* Tags Section */}
-                <Toggler selectedTags={tags} setSelectedTags={setTags} />
+                <Toggler 
+                    selectedTags={tags} setSelectedTags={setTags} 
+                    selectedCategory={category } setSelectedCategory = {setCategory} 
+                    selectedCategoryId={categoryId} setSelectedCategoryId={setCategoryId}
+                    selectedTagId={tagId} setSelectedTagId={setTagId} 
+                />
 
                 {/* Description Section */}
                 <View style={styles.card}>
