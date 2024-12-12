@@ -1,9 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Header from '../components/Header';
 import DashBoardImage from '../components/DashBoardImage';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebaseConfig'; 
 
 
 

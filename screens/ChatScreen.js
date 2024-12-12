@@ -1,148 +1,195 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
-import { categories } from '../assets/data/Categories';
+import React, { useState, useEffect } from 'react';
+import { Text, TextInput, TouchableOpacity, StyleSheet, Animated, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Notifications from 'expo-notifications';
 
+const ChatScreen = () => {
+    const [text, setText] = useState('');
+    const [date, setDate] = useState(new Date());
+    const [showPicker, setShowPicker] = useState(false);
+    const [animation, setAnimation] = useState(new Animated.Value(0));
+    const [loading, setLoading] = useState(false);
+    const [buttonText, setButtonText] = useState('Save and Schedule');
+    const [notification, setNotification] = useState(null);
 
-const ChatScreen = ({ navigation }) => {
-    const [expandedCategories, setExpandedCategories] = useState([]);
-    const [selectedTags, setSelectedTags] = useState([]);
-
-    console.log(expandedCategories)
-    console.log(selectedTags)
-
-    //Toggle Category 
-    const toggleCategory = (category) => {
-        if (expandedCategories.includes(category)) {
-            setExpandedCategories(expandedCategories.filter(item => item != category))
-        } else {
-            setExpandedCategories([...expandedCategories, category]);
-        };
+    const validateInputs = () => {
+        if (!text) return 'Please insert a text.';
+        if (!date) return 'Please insert a date.';
+        return null;
     };
-    //Toggle Tag 
-    const toggleTag = (tag) => {
-        if (selectedTags.includes(tag)) {
-            setSelectedTags(selectedTags.filter(t => t !== tag))
-        } else {
-            if (selectedTags.length < 5) {
-                setSelectedTags([...selectedTags, tag]);
-            } else {
-                Alert.alert("Tag Limit Reached", "You can select up to 5 tags only.");
+
+    const resetForm = () => {
+        setText('');
+        setShowPicker(false);
+        setLoading(false);
+        setButtonText('Save and Schedule');
+    };
+
+    useEffect(() => {
+        Animated.timing(animation, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+        }).start();
+    }, []);
+
+    useEffect(() => {
+        Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+                shouldShowAlert: true,
+                shouldPlaySound: true,
+                shouldSetBadge: false,
+            }),
+        });
+
+        const getNotificationPermission = async () => {
+            const { status } = await Notifications.requestPermissionsAsync();
+            if (status !== 'granted') {
+                alert('Permission to access notifications was denied');
             }
+        };
+        getNotificationPermission();
+
+        const subscription = Notifications.addNotificationReceivedListener(notification => {
+            setNotification(notification);
+        });
+
+        return () => subscription.remove();
+    }, []);
+
+    const scheduleNotification = async () => {
+        const error = validateInputs();
+        if (error) {
+            Alert.alert("Validation Error", error);
+            return;
         }
-    }
+        try {
+            setLoading(true);
+            const triggerTime = new Date(date);
+
+            if (triggerTime <= new Date()) {
+                alert('Please select a future date and time.');
+                return;
+            }
+
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: "Your Text Time Capsule is here",
+                    body: text,
+                },
+                trigger: triggerTime,
+            });
+
+            alert('Notification Scheduled!');
+            setButtonText('Text Saved');
+            setTimeout(resetForm, 2000);
+        } catch (error) {
+            Alert.alert('Error', `Failed to upload submission: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const onChange = (event, selectedDate) => {
+        const currentDate = selectedDate || date;
+        setShowPicker(false);
+        setDate(currentDate);
+    };
+
     return (
-        <ScrollView style={styles.container}>
-            {Object.entries(categories).map(([category, tags], index) => (
-                <View key={index} style={styles.category}>
-                    {/* Category Header */}
-                    <TouchableOpacity
-                        style={styles.categoryHeader}
-                        onPress={() => toggleCategory(category)}
-                    >
-                        <Text style={styles.categoryTitle}>{category}</Text>
-                        <Text style={styles.toggleSymbol}>
-                            {expandedCategories.includes(category) ? '-' : '+'}
-                        </Text>
+        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                <Animated.View style={[styles.inner, { opacity: animation }]}>
+                    <Text style={styles.title}>Time Capsule</Text>
+
+                    <TextInput
+                        style={styles.textInput}
+                        placeholder="Write your letter..."
+                        value={text}
+                        onChangeText={setText}
+                        multiline
+                        autoFocus
+                    />
+
+                    <TouchableOpacity style={styles.dateButton} onPress={() => setShowPicker(true)}>
+                        <Text style={styles.dateButtonText}>Pick Date & Time</Text>
                     </TouchableOpacity>
 
-                    {/* Tags as Chips */}
-                    {expandedCategories.includes(category) && (
-                        <View style={styles.tagContainer}>
-                            {tags.map((tag, i) => (
-                                <TouchableOpacity
-                                    key={i}
-                                    style={[
-                                        styles.tagChip,
-                                        selectedTags.includes(tag) && styles.selectedChip,
-                                    ]}
-                                    onPress={() => toggleTag(tag)}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.tagText,
-                                            selectedTags.includes(tag) && styles.selectedText,
-                                        ]}
-                                    >
-                                        {tag}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+                    {showPicker && (
+                        <DateTimePicker
+                            value={date}
+                            mode="datetime"
+                            display="default"
+                            onChange={onChange}
+                        />
                     )}
-                </View>
-            ))}
-            <TouchableOpacity
-                onPress={() => console.log('Selected Tags:', selectedTags)}
-                style={styles.submitButton}
-            >
-                <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
-        </ScrollView>
+
+                    <TouchableOpacity style={styles.button} onPress={scheduleNotification}>
+                        {loading ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <Text style={styles.buttonText}>{buttonText}</Text>
+                        )}
+                    </TouchableOpacity>
+                </Animated.View>
+            </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#F4F6FF',
-        marginTop: 40,
-        
+        backgroundColor: '#fff',
     },
-    category: {
-        marginBottom: 10,
-        flexDirection: 'column',
-        
+    inner: {
+        padding: 30,
+        justifyContent: 'center',
+        flex: 1,
     },
-    categoryHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    title: {
+        fontSize: 28,
+        fontWeight: '700',
+        textAlign: 'center',
+        color: '#222',
+        marginBottom: 20,
+    },
+    textInput: {
+        backgroundColor: '#003c8f',  
+        padding: 16,
+        borderRadius: 10,
+        fontSize: 16,
+        marginBottom: 20,
+        elevation: 5,
+        textAlignVertical: 'top', 
+        color: '#333', 
+       
+    },
+    dateButton: {
+        backgroundColor: '#003c8f',
+        paddingVertical: 12,
+        paddingHorizontal: 25,
+        borderRadius: 10,
         alignItems: 'center',
-        backgroundColor: '#e8eaf6',
-        padding: 10,
-        borderRadius: 5,
+        marginBottom: 20,
     },
-    categoryTitle: {
-        fontSize: 10,
-        fontWeight: 'bold',
-    },
-    toggleSymbol: {
-        fontSize: 10,
-        fontWeight: 'bold',
-    },
-    tagContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginTop: 10,
-        
-    },
-    tagChip: {
-        backgroundColor: '#ccc',
-        padding: 8,
-        borderRadius: 20,
-        margin: 5,
-    },
-    selectedChip: {
-        backgroundColor: '#007bff',
-    },
-    tagText: {
-        color: '#000',
-        fontSize: 10,
-    },
-    selectedText: {
+    dateButtonText: {
         color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
     },
-    submitButton: {
-        backgroundColor: '#007bff',
-        padding: 15,
-        borderRadius: 5,
+    button: {
+        backgroundColor: '#ff7043',
+        paddingVertical: 15,
+        borderRadius: 10,
         alignItems: 'center',
+        elevation: 5,
     },
-    submitButtonText: {
+    buttonText: {
         color: '#fff',
+        fontWeight: 'bold',
         fontSize: 16,
     },
 });
 
-
-export default ChatScreen; 
+export default ChatScreen;

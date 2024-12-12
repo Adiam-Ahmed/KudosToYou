@@ -75,3 +75,37 @@ export const fetchData = async (kudos) =>{
     }
 }
 
+// Function to save TextCapsule 
+export const saveTextCapsule = async (text, date) => {
+    try { 
+        const userId = 12345
+        await addDoc(collection(db, 'timeCapsules'), {
+            userId, 
+            text,
+            date: date.toISOString(),
+            createdAt: new Date().toISOString(),
+        });
+        console.log('Time capsule saved!');
+    } catch (error) {
+        console.error('Error saving time capsule:', error);
+    }
+};
+
+
+// Function to get TextCapsule data to Firestore
+export const fetchTimeCapsules = async () => {
+    try {
+        const q = query(collection(db, 'timeCapsules'));
+        const querySnapshot = await getDocs(q);
+
+        const capsules = [];
+        querySnapshot.forEach((doc) => {
+            capsules.push({ id: doc.id, ...doc.data() });
+        });
+
+        console.log('User Time Capsules:', capsules);
+    } catch (error) {
+        console.error('Error fetching time capsules:', error);
+    }
+};
+
