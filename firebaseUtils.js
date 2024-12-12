@@ -1,7 +1,7 @@
 import { ref, uploadBytesResumable, getDownloadURL, getStorage } from 'firebase/storage';
 import { addDoc, collection, doc, getDocs } from 'firebase/firestore';
-import { storage, db, auth } from './firebaseConfig';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { storage, db,  } from './firebaseConfig';
+
 
 
 
@@ -108,25 +108,3 @@ export const fetchTimeCapsules = async () => {
         console.error('Error fetching time capsules:', error);
     }
 };
-
-
-
-// Function to handle Login
-export const handleLogin = async (email, password) => {
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        return userCredential.user;
-    } catch (error) {
-        throw error; // Handle errors in the UI
-    }
-};
-
-// Function to handle Logout
-export const handleLogout = async () => {
-    try {
-        await signOut(auth);
-    } catch (error) {
-        throw error; // Handle errors in the UI
-    }
-};
-

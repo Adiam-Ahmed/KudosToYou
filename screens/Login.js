@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image,Alert } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
-import logo from '../assets/logo/logo.png';
+import logo from '../assets/logo/logoNoBg.png';
 import { useNavigation } from '@react-navigation/native';
 
 
@@ -10,28 +10,25 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
-
-  const restForm = ()=>{
-    setEmail('')
-    setPassword('')
-  }
+  const [loading, setLoading] = useState(false);
 
   const onLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+    setLoading(true);
     try {
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      restForm()
+      await signInWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", "Logged in successfully");
-      navigation.navigate('Home')
+      navigation.navigate('Home');
     } catch (error) {
+      console.error("Login Error: ", error); 
       Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
     }
   };
-
-
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -60,7 +57,7 @@ const Login = () => {
           value={password}
         />
         <TouchableOpacity style={styles.button} onPress={onLogin}>
-          <Text style={styles.buttonText}>Sign In</Text>
+          <Text style={styles.buttonText}>{loading ? "Signing In..." : "Sign In"}</Text>
         </TouchableOpacity>
         <View style={styles.signUp} >
                   <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('SignUp')}>
@@ -81,7 +78,7 @@ const Login = () => {
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    backgroundColor: '#003c8f',
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 0,
@@ -104,13 +101,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#003c8f',
     marginBottom: 20,
   },
   input: {
     width: '100%',
     height: 60,
-    backgroundColor: '#fff',
+    backgroundColor: '#003c8f',
     borderRadius: 8,
     padding: 8,
     paddingHorizontal: 15,
@@ -142,7 +139,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   secondaryButtonText: {
-    color: 'white',
+    color: '#003c8f',
     fontSize: 16,
     marginBottom: 30,
   },

@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import AddItemScreen from '../screens/AddItemScreen';
 import ChatScreen from '../screens/ChatScreen';
 import DashboardScreen from '../screens/DashboardScreen';
+import ProfileScreen from './ProfileScreen';
 
 
 const Tab = createBottomTabNavigator();
@@ -25,6 +26,9 @@ const HomeScreen = () => {
                         case 'Dear Future Self':
                             iconName = 'chatbubbles-outline';
                             break;
+                        case 'Profile Screen':
+                            iconName = 'person-outline';
+                            break;
                         default:
                             iconName = 'ellipsis-horizontal-circle-outline';
                     }
@@ -36,6 +40,7 @@ const HomeScreen = () => {
             <Tab.Screen name="Dashboard " component={DashboardScreen} options={{ headerShown: false }} />
             <Tab.Screen name="Upload" component={AddItemScreen} options={{ headerShown: false }} />
             <Tab.Screen name="Dear Future Self" component={ChatScreen} options={{ headerShown: false }} />
+            <Tab.Screen name="Profile Screen" component={ProfileScreen} options={{ headerShown: false }} />
         </Tab.Navigator>
     );
 };
