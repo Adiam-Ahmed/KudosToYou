@@ -4,6 +4,7 @@
     "slug": "KudosToYou",
     "version": "1.0.0",
     "orientation": "portrait",
+    "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
@@ -15,7 +16,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.adiamahmed.KudosToYou"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +27,11 @@
     },
     "web": {
       "favicon": ""
+    },
+    "extra": {
+      "eas": {
+        "projectId": "50ecbb00-5044-4efd-bde7-4c64e34e2bf1"
+      }
     }
   }
 }
-
