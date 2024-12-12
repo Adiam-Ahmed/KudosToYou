@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AddItemScreen from '../screens/AddItemScreen';
 import ChatScreen from '../screens/ChatScreen';
-import DashboardScreen from '../screens/DashboardScreen'; 
+import DashboardScreen from '../screens/DashboardScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,10 +18,10 @@ const HomeScreen = () => {
                         case 'Home':
                             iconName = 'home-outline';
                             break;
-                        case 'AddItem':
-                            iconName = 'add-circle-outline';
+                        case 'Upload':
+                            iconName = "cloud-upload-outline";
                             break;
-                        case 'Chat':
+                        case 'Dear Future Self':
                             iconName = 'chatbubbles-outline';
                             break;
                         default:
@@ -32,10 +32,9 @@ const HomeScreen = () => {
                 },
             })}
         >
-            {/* Ensure each screen is passed the proper component */}
             <Tab.Screen name="Dashboard " component={DashboardScreen} options={{ headerShown: false }} />
-            <Tab.Screen name="AddItem" component={AddItemScreen} options={{ headerShown: false }} />
-            <Tab.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
+            <Tab.Screen name="Upload" component={AddItemScreen} options={{ headerShown: false }} />
+            <Tab.Screen name="Dear Future Self" component={ChatScreen} options={{ headerShown: false }} />
         </Tab.Navigator>
     );
 };

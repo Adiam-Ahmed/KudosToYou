@@ -1,148 +1,181 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
-import { categories } from '../assets/data/Categories';
+import React, { useState, useEffect } from 'react';
+import { Text, TextInput, TouchableOpacity, StyleSheet, Animated, Alert, ActivityIndicator } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Notifications from 'expo-notifications';
+import { saveTextCapsule } from '../firebaseUtils';
 
+const ChatScreen = () => {
+    const [text, setText] = useState('');
+    const [date, setDate] = useState(new Date());
+    const [showPicker, setShowPicker] = useState(false);
+    const [animation, setAnimation] = useState(new Animated.Value(0));
+    const [loading, setLoading] = useState(false);
+    const [buttonText, setButtonText] = useState('Save and Schedule');
 
-const ChatScreen = ({ navigation }) => {
-    const [expandedCategories, setExpandedCategories] = useState([]);
-    const [selectedTags, setSelectedTags] = useState([]);
-
-    console.log(expandedCategories)
-    console.log(selectedTags)
-
-    //Toggle Category 
-    const toggleCategory = (category) => {
-        if (expandedCategories.includes(category)) {
-            setExpandedCategories(expandedCategories.filter(item => item != category))
-        } else {
-            setExpandedCategories([...expandedCategories, category]);
-        };
+    // Validation for form inputs
+    const validateInputs = () => {
+        if (!text) return 'Please insert a text.';
+        if (!date) return 'Please insert a date.';
+        return null;
     };
-    //Toggle Tag 
-    const toggleTag = (tag) => {
-        if (selectedTags.includes(tag)) {
-            setSelectedTags(selectedTags.filter(t => t !== tag))
-        } else {
-            if (selectedTags.length < 5) {
-                setSelectedTags([...selectedTags, tag]);
-            } else {
-                Alert.alert("Tag Limit Reached", "You can select up to 5 tags only.");
-            }
-        }
-    }
-    return (
-        <ScrollView style={styles.container}>
-            {Object.entries(categories).map(([category, tags], index) => (
-                <View key={index} style={styles.category}>
-                    {/* Category Header */}
-                    <TouchableOpacity
-                        style={styles.categoryHeader}
-                        onPress={() => toggleCategory(category)}
-                    >
-                        <Text style={styles.categoryTitle}>{category}</Text>
-                        <Text style={styles.toggleSymbol}>
-                            {expandedCategories.includes(category) ? '-' : '+'}
-                        </Text>
-                    </TouchableOpacity>
 
-                    {/* Tags as Chips */}
-                    {expandedCategories.includes(category) && (
-                        <View style={styles.tagContainer}>
-                            {tags.map((tag, i) => (
-                                <TouchableOpacity
-                                    key={i}
-                                    style={[
-                                        styles.tagChip,
-                                        selectedTags.includes(tag) && styles.selectedChip,
-                                    ]}
-                                    onPress={() => toggleTag(tag)}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.tagText,
-                                            selectedTags.includes(tag) && styles.selectedText,
-                                        ]}
-                                    >
-                                        {tag}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
-                </View>
-            ))}
-            <TouchableOpacity
-                onPress={() => console.log('Selected Tags:', selectedTags)}
-                style={styles.submitButton}
-            >
-                <Text style={styles.submitButtonText}>Submit</Text>
+    const resetForm = () => {
+        setText('');
+        setShowPicker(false);
+        setLoading(false);
+        setButtonText('Save and Schedule');
+    };
+
+    useEffect(() => {
+        Animated.timing(animation, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+        }).start();
+    }, []);
+
+    useEffect(() => {
+        const requestNotificationPermissions = async () => {
+            const { status } = await Notifications.requestPermissionsAsync();
+            if (status !== 'granted') {
+                alert('Permission to send notifications is required!');
+            }
+        };
+
+        requestNotificationPermissions();
+    }, []);
+
+    const onChange = (event, selectedDate) => {
+        const currentDate = selectedDate || date;
+        setShowPicker(false);
+        setDate(currentDate);
+    };
+
+    const scheduleNotification = async () => {
+        const error = validateInputs();
+        if (error) {
+            Alert.alert("Validation Error", error);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await saveTextCapsule(text, date);
+
+            const triggerTime = new Date(date).getTime() - new Date().getTime(); // Time difference in ms
+
+            // Check if the date is in the past
+            if (triggerTime <= 0) {
+                Alert.alert("Invalid Date", "Please select a future date.");
+                return;
+            }
+
+            // Schedule the notification
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: "Your Time Capsule",
+                    body: text,
+                },
+                trigger: {
+                    seconds: Math.floor(triggerTime / 1000), // Convert milliseconds to seconds
+                    repeats: false,
+                },
+            });
+
+            alert('Notification Scheduled!');
+            setButtonText('Text Saved');
+            setTimeout(resetForm, 2000);  // Reset form after 2 seconds
+
+        } catch (error) {
+            console.error("Error during submission:", error);
+            Alert.alert('Error', `Failed to upload submission: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Animated.View style={[styles.container, { opacity: animation }]}>
+            <Text style={styles.title}>Time Capsule</Text>
+
+            <TextInput
+                style={styles.textInput}
+                placeholder="Write your letter..."
+                value={text}
+                onChangeText={setText}
+                multiline
+            />
+
+            <TouchableOpacity style={styles.dateButton} onPress={() => setShowPicker(true)}>
+                <Text style={styles.dateButtonText}>Pick Date & Time</Text>
             </TouchableOpacity>
-        </ScrollView>
+
+            {showPicker && (
+                <DateTimePicker
+                    value={date}
+                    mode="datetime"
+                    display="default"
+                    onChange={onChange}
+                />
+            )}
+
+            <TouchableOpacity style={styles.button} onPress={scheduleNotification}>
+                {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                    <Text style={styles.buttonText}>{buttonText}</Text>
+                )}
+            </TouchableOpacity>
+        </Animated.View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f9f9f9',
         padding: 20,
-        backgroundColor: '#F4F6FF',
-        marginTop: 40,
-        
+        justifyContent: 'center',
     },
-    category: {
-        marginBottom: 10,
-        flexDirection: 'column',
-        
-    },
-    categoryHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#e8eaf6',
-        padding: 10,
-        borderRadius: 5,
-    },
-    categoryTitle: {
-        fontSize: 10,
+    title: {
+        fontSize: 24,
         fontWeight: 'bold',
+        marginBottom: 20,
+        textAlign: 'center',
+        color: '#333',
     },
-    toggleSymbol: {
-        fontSize: 10,
-        fontWeight: 'bold',
-    },
-    tagContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginTop: 10,
-        
-    },
-    tagChip: {
-        backgroundColor: '#ccc',
-        padding: 8,
-        borderRadius: 20,
-        margin: 5,
-    },
-    selectedChip: {
-        backgroundColor: '#007bff',
-    },
-    tagText: {
-        color: '#000',
-        fontSize: 10,
-    },
-    selectedText: {
-        color: '#fff',
-    },
-    submitButton: {
-        backgroundColor: '#007bff',
+    textInput: {
+        backgroundColor: '#fff',
         padding: 15,
-        borderRadius: 5,
-        alignItems: 'center',
+        borderRadius: 10,
+        fontSize: 16,
+        marginBottom: 20,
+        elevation: 3,
     },
-    submitButtonText: {
+    dateButton: {
+        backgroundColor: '#5e92f3',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    dateButtonText: {
         color: '#fff',
+        fontWeight: 'bold',
+    },
+    button: {
+        backgroundColor: '#ff7043',
+        paddingVertical: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        elevation: 3,
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
         fontSize: 16,
     },
 });
 
-
-export default ChatScreen; 
+export default ChatScreen;
