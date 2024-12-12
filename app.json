@@ -4,7 +4,7 @@
     "slug": "KudosToYou",
     "version": "1.0.0",
     "orientation": "portrait",
-    "newArchEnabled": true,
+    
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
@@ -19,12 +19,16 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.adiamahmed.KudosToYou"
     },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "",
-        "backgroundColor": "#FFFFFF"
-      }
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "",
+      "backgroundColor": "#FFFFFF"
     },
+    "package": "com.danyrivas13.AppDeliveryReactNative",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    }
+  },
     "web": {
       "favicon": ""
     },
