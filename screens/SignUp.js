@@ -1,22 +1,45 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
-import { signUp, login } from '../firebaseUtils';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import logo from '../assets/logo/logo.png';
-
+import { auth } from '../firebaseConfig';
+import { createUserWithEmailAndPassword} from 'firebase/auth';
 
 const SignUp = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigation = useNavigation();
+
+  const restForm = ()=>{
+    setEmail('')
+    setPassword('')
+  }
+
+  const onSignup = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password.');
+      return;
+    }
+    try {
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      restForm()
+      Alert.alert("Success", "Account created successfully");
+      navigation.navigate('Home')
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
+
 
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.headerContainer}>
-      <Image 
-          source={logo} style={styles.headerImage}
-      />
+        <Image source={logo} style={styles.headerImage} />
       </View>
       <View style={styles.formContainer}>
         <Text style={styles.title}>Create your Account</Text>
@@ -37,10 +60,10 @@ const SignUp = () => {
           onChangeText={(text) => setPassword(text)}
           value={password}
         />
-        <TouchableOpacity style={styles.button} onPress={signUp}>
+        <TouchableOpacity style={styles.button} onPress={onSignup}>
           <Text style={styles.buttonText}>Sign up</Text>
         </TouchableOpacity>
-        <View style={styles.signUp} >
+        <View style={styles.signUp}>
           <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Login')}>
             <Text style={styles.secondaryButtonText}>
               Already have an account?{' '}
@@ -52,9 +75,8 @@ const SignUp = () => {
         </View>
       </View>
     </ScrollView>
-  )
-
-}
+  );
+};
 
 const styles = StyleSheet.create({
   scrollContainer: {
@@ -63,21 +85,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 0,
-
   },
   headerContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerImage:{
+  headerImage: {
     width: 300,
-    height:230
+    height: 230,
   },
   formContainer: {
     flex: 1,
     width: '100%',
     paddingHorizontal: 20,
-    justifyContent:'flex-start',
+    justifyContent: 'flex-start',
   },
   title: {
     fontSize: 20,
@@ -99,8 +120,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-    borderWidth: 2, 
-    borderColor: '#5e92f3', 
+    borderWidth: 2,
+    borderColor: '#5e92f3',
   },
   button: {
     width: '100%',
@@ -124,14 +145,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 30,
   },
-  signUp:{
+  signUp: {
     alignItems: 'center',
   },
-  googleContainer:{
-    justifyContent: 'center',
-    alignItems: 'center',
-  }
-
 });
 
-export default SignUp
+export default SignUp;

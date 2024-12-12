@@ -1,14 +1,35 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
-import { signUp, login } from '../firebaseUtils';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 import logo from '../assets/logo/logo.png';
 import { useNavigation } from '@react-navigation/native';
 
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigation = useNavigation();
+
+  const restForm = ()=>{
+    setEmail('')
+    setPassword('')
+  }
+
+  const onLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      restForm()
+      Alert.alert("Success", "Logged in successfully");
+      navigation.navigate('Home')
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
 
 
 
@@ -38,7 +59,7 @@ const Login = () => {
           onChangeText={(text) => setPassword(text)}
           value={password}
         />
-        <TouchableOpacity style={styles.button} onPress={signUp}>
+        <TouchableOpacity style={styles.button} onPress={onLogin}>
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
         <View style={styles.signUp} >

@@ -5,12 +5,12 @@ import HomeScreen from '../screens/HomeScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import Login from '../screens/Login';
 import SignUp from '../screens/SignUp';
-import { getAuth } from 'firebase/auth'; // Import Firebase Auth to check authentication
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
 
 const Stack = createStackNavigator();
 
 const MainNavigator = () => {
-    const [isFirstLaunch, setIsFirstLaunch] = useState(false);
+    const [isFirstLaunch, setIsFirstLaunch] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
@@ -25,19 +25,25 @@ const MainNavigator = () => {
         });
 
         // Check if the user is authenticated (using Firebase auth)
+        // Monitor authentication state changes
         const auth = getAuth();
-        const user = auth.currentUser;
-        if (user) {
-            setIsAuthenticated(true); // User is logged in
-        } else {
-            setIsAuthenticated(false); // User is not logged in
-        }
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setIsAuthenticated(true); // User is logged in
+            } else {
+                setIsAuthenticated(false); // User is not logged in
+            }
+        });
+
+
+        return () => unsubscribe();
     }, []);
 
     if (isFirstLaunch === null || isAuthenticated === null) {
         return null; // Loading state
     }
 
+    
     return (
         <Stack.Navigator initialRouteName={isFirstLaunch ? 'Onboarding' : isAuthenticated ? 'Home' : 'SignUp'}>
             <Stack.Screen

@@ -6,8 +6,8 @@ import { Button, Icon } from 'react-native-elements';
 const OnboardingScreen = ({ navigation }) => (
     <Onboarding
         showDone={true}
-        onSkip={() => navigation.replace('Home')}
-        onDone={() => navigation.replace('Home')}
+        onSkip={() => navigation.replace('SignUp')}
+        onDone={() => navigation.replace('SignUp')}
         pages={[
             {
                 title: 'Hey!',
@@ -62,7 +62,7 @@ const OnboardingScreen = ({ navigation }) => (
                         textStyle={{ color: '#003c8f' }}
                         onPress={() => {
                             Alert.alert('done');
-                            navigation.replace('Home');  // Navigate to home after "Get Started"
+                            navigation.replace('SignUp');  // Navigate to home after "Get Started"
                         }}
                     />
                 ),
